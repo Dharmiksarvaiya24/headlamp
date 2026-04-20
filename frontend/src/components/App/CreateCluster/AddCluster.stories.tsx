@@ -14,50 +14,95 @@
  * limitations under the License.
  */
 
-import { Meta, StoryFn } from '@storybook/react';
+import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import { Meta } from '@storybook/react';
+import React from 'react';
 import { TestContext } from '../../../test';
 import AddCluster from './AddCluster';
+
+type FormStoryState =
+  | 'empty'
+  | 'validationErrors'
+  | 'testLoading'
+  | 'testSuccess'
+  | 'testFailure'
+  | 'saveSuccess';
+
+function AddClusterFormMock({ state }: { state: FormStoryState }) {
+  const showValidationErrors = state === 'validationErrors';
+  const showLoading = state === 'testLoading';
+  const showTestSuccess = state === 'testSuccess';
+  const showTestFailure = state === 'testFailure';
+  const showSaveSuccess = state === 'saveSuccess';
+
+  return (
+    <Paper elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'divider' }}>
+      <Stack spacing={2}>
+        <Box>
+          <Typography variant="h6">Add Cluster</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Configure a cluster connection and validate it before saving.
+          </Typography>
+        </Box>
+
+        {showSaveSuccess && <Alert severity="success">Cluster saved successfully.</Alert>}
+        {showTestSuccess && <Alert severity="success">Connection test succeeded.</Alert>}
+        {showTestFailure && <Alert severity="error">Connection test failed.</Alert>}
+        {showLoading && <Alert severity="info">Testing cluster connection...</Alert>}
+
+        <TextField
+          label="Cluster name"
+          value={state === 'empty' ? '' : 'demo-cluster'}
+          error={showValidationErrors}
+          helperText={showValidationErrors ? 'Cluster name is required.' : ' '}
+          fullWidth
+        />
+        <TextField
+          label="Server URL"
+          value={state === 'empty' ? '' : 'https://demo.example.com'}
+          error={showValidationErrors}
+          helperText={showValidationErrors ? 'Server URL is required.' : ' '}
+          fullWidth
+        />
+        <TextField
+          label="Access token"
+          value={state === 'empty' ? '' : '••••••••'}
+          fullWidth
+          helperText=" "
+        />
+
+        <Stack direction="row" spacing={1}>
+          <Button variant="outlined" disabled={showLoading}>
+            {showLoading ? <CircularProgress size={16} /> : 'Test connection'}
+          </Button>
+          <Button variant="contained">Save cluster</Button>
+        </Stack>
+      </Stack>
+    </Paper>
+  );
+}
 
 export default {
   title: 'App/AddCluster',
   component: AddCluster,
-  decorators: [
-    Story => (
-      <TestContext>
-        <Story />
-      </TestContext>
-    ),
-  ],
 } as Meta;
 
-const Template: StoryFn<typeof AddCluster> = args => <AddCluster {...args} />;
+export const LandingPage = () => (
+  <TestContext>
+    <AddCluster open onChoice={() => {}} />
+  </TestContext>
+);
 
-export const EmptyFormState = Template.bind({});
-EmptyFormState.args = {
-  open: true,
-  onChoice: () => {},
-};
-
-export const FormValidationErrors = Template.bind({});
-FormValidationErrors.args = {
-  open: true,
-  onChoice: () => {},
-};
-
-export const ClusterConnectionTestLoading = Template.bind({});
-ClusterConnectionTestLoading.args = {
-  open: true,
-  onChoice: () => {},
-};
-
-export const ConnectionTestSuccess = Template.bind({});
-ConnectionTestSuccess.args = {
-  open: true,
-  onChoice: () => {},
-};
-
-export const SaveClusterSuccess = Template.bind({});
-SaveClusterSuccess.args = {
-  open: true,
-  onChoice: () => {},
-};
+export const EmptyFormState = () => <AddClusterFormMock state="empty" />;
+export const FormValidationErrors = () => <AddClusterFormMock state="validationErrors" />;
+export const ClusterConnectionTestLoading = () => <AddClusterFormMock state="testLoading" />;
+export const ConnectionTestSuccess = () => <AddClusterFormMock state="testSuccess" />;
+export const ConnectionTestFailure = () => <AddClusterFormMock state="testFailure" />;
+export const SaveClusterSuccess = () => <AddClusterFormMock state="saveSuccess" />;
