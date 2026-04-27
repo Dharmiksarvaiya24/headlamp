@@ -109,23 +109,25 @@ export const WithPluginCatalog: Story = {
   },
   decorators: [
     Story => {
-      // Save the original process object
-      const originalProcess = (window as any).process;
+      function ElectronStoryDecorator() {
+        const originalProcess = React.useRef((window as any).process);
 
-      // Mock Electron environment
-      (window as any).process = { type: 'renderer' };
+        React.useEffect(() => {
+          (window as any).process = { type: 'renderer' };
 
-      return (
-        <>
-          <Story />
-          {/* Cleanup: restore original process after render */}
-          {(() => {
-            // This runs during cleanup
-            (window as any).process = originalProcess;
-            return null;
-          })()}
-        </>
-      );
+          return () => {
+            if (originalProcess.current === undefined) {
+              delete (window as any).process;
+            } else {
+              (window as any).process = originalProcess.current;
+            }
+          };
+        }, []);
+
+        return <Story />;
+      }
+
+      return <ElectronStoryDecorator />;
     },
   ],
 };
