@@ -15,7 +15,7 @@
  */
 
 import { configureStore } from '@reduxjs/toolkit';
-import { Meta } from '@storybook/react';
+import { Meta, StoryObj } from '@storybook/react';
 import React from 'react';
 import {
   type ClusterProviderSliceState,
@@ -50,56 +50,83 @@ function createStoryStore({
   });
 }
 
-// AddCluster currently reads only clusterProvider.clusterProviders and sidebar.entries,
-// so these stories stay constrained to those real inputs and intentionally avoid mocked UI.
-const emptyAddClusterState = {
-  clusterProvider: {
-    ...CLUSTER_PROVIDER_INITIAL_STATE,
-    clusterProviders: [],
-  },
-  sidebar: {
-    ...SIDEBAR_INITIAL_STATE,
-    entries: {},
+const meta: Meta<typeof AddCluster> = {
+  title: 'App/AddCluster',
+  component: AddCluster,
+  decorators: [
+    (Story, context) => (
+      <TestContext store={context.parameters.store}>
+        <Story />
+      </TestContext>
+    ),
+  ],
+  args: {
+    open: true,
+    onChoice: () => {},
   },
 };
 
-export default {
-  title: 'App/AddCluster',
-  component: AddCluster,
-} as Meta<typeof AddCluster>;
+export default meta;
 
-export const EmptyFormState = () => (
-  <TestContext store={createStoryStore(emptyAddClusterState)}>
-    <AddCluster open onChoice={() => {}} />
-  </TestContext>
-);
+type Story = StoryObj<typeof AddCluster>;
 
-export const FormValidationErrors = () => (
-  <TestContext store={createStoryStore(emptyAddClusterState)}>
-    <AddCluster open onChoice={() => {}} />
-  </TestContext>
-);
+// No providers registered, no plugin catalog in sidebar
+export const NoProviders: Story = {
+  parameters: {
+    store: createStoryStore({
+      clusterProvider: {
+        ...CLUSTER_PROVIDER_INITIAL_STATE,
+        clusterProviders: [],
+      },
+      sidebar: {
+        ...SIDEBAR_INITIAL_STATE,
+        entries: {},
+      },
+    }),
+  },
+};
 
-export const ClusterConnectionTestLoading = () => (
-  <TestContext store={createStoryStore(emptyAddClusterState)}>
-    <AddCluster open onChoice={() => {}} />
-  </TestContext>
-);
+// No providers but plugin catalog is registered in sidebar
+export const WithPluginCatalog: Story = {
+  parameters: {
+    store: createStoryStore({
+      clusterProvider: {
+        ...CLUSTER_PROVIDER_INITIAL_STATE,
+        clusterProviders: [],
+      },
+      sidebar: {
+        ...SIDEBAR_INITIAL_STATE,
+        entries: {
+          pluginCatalog: {
+            name: 'pluginCatalog',
+            label: 'Plugin Catalog',
+            url: '/plugin-catalog',
+          },
+        },
+      },
+    }),
+  },
+};
 
-export const ConnectionTestSuccess = () => (
-  <TestContext store={createStoryStore(emptyAddClusterState)}>
-    <AddCluster open onChoice={() => {}} />
-  </TestContext>
-);
-
-export const ConnectionTestFailure = () => (
-  <TestContext store={createStoryStore(emptyAddClusterState)}>
-    <AddCluster open onChoice={() => {}} />
-  </TestContext>
-);
-
-export const SaveClusterSuccess = () => (
-  <TestContext store={createStoryStore(emptyAddClusterState)}>
-    <AddCluster open onChoice={() => {}} />
-  </TestContext>
-);
+// Cluster providers registered and shown in the list
+export const WithProviders: Story = {
+  parameters: {
+    store: createStoryStore({
+      clusterProvider: {
+        ...CLUSTER_PROVIDER_INITIAL_STATE,
+        clusterProviders: [
+          {
+            title: 'Minikube',
+            icon: () => null,
+            description: 'Run a local Kubernetes cluster with Minikube.',
+            url: '/minikube',
+          },
+        ],
+      },
+      sidebar: {
+        ...SIDEBAR_INITIAL_STATE,
+        entries: {},
+      },
+    }),
+  },
+};
