@@ -87,6 +87,7 @@ export const NoProviders: Story = {
 };
 
 // No providers but plugin catalog is registered in sidebar
+// This story mocks an Electron environment so the "Add Local Cluster Provider" button appears
 export const WithPluginCatalog: Story = {
   parameters: {
     store: createStoryStore({
@@ -106,6 +107,27 @@ export const WithPluginCatalog: Story = {
       },
     }),
   },
+  decorators: [
+    Story => {
+      // Save the original process object
+      const originalProcess = (window as any).process;
+
+      // Mock Electron environment
+      (window as any).process = { type: 'renderer' };
+
+      return (
+        <>
+          <Story />
+          {/* Cleanup: restore original process after render */}
+          {(() => {
+            // This runs during cleanup
+            (window as any).process = originalProcess;
+            return null;
+          })()}
+        </>
+      );
+    },
+  ],
 };
 
 // Cluster providers registered and shown in the list
